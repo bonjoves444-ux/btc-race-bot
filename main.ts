@@ -51,7 +51,7 @@ await runBars({
     let high = -Infinity;
     for (const c of window) if (c > high) high = c;
 
-    // Drop from 360-bar high in bps
+    // Drop from 120-bar high in bps
     const dropBps = Math.round(((high - close) / high) * 10000);
 
     const held = state.positions.get(SYMBOL);
@@ -65,7 +65,7 @@ await runBars({
         orders.push({ side: 'sell', symbol: SYMBOL, qty: held.qty, max_slippage_bps: MAX_SLIPPAGE_BPS });
       }
     } else if (dropBps >= DIP_THRESHOLD_BPS && upBars >= REVERSAL_BARS) {
-      // Significant dip from 6-hour high, with 2 consecutive up bars (reversal)
+      // Significant dip from 2-hour high, with 2 consecutive up bars (reversal)
       const { caps } = state.hello;
       const byWeight = (BigInt(caps.max_weight_bps) * state.equity) / BPS;
       let slice = state.cash < byWeight ? state.cash : byWeight;
