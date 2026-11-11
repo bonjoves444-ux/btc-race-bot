@@ -1,15 +1,15 @@
 // Dip-buying BTC trading bot for make.fun btc-race-24h-20261111-0801
 // Strategy: Buy significant dips with reversal confirmation.
-// - Track the highest price in the last 60 bars (1 hour)
-// - Buy when price has dropped >1.2% from that high AND risen for 2 consecutive bars
-// - Sell at +0.8% profit target, -0.8% stop loss, or when price falls 0.5% from peak after entry
+// - Track the highest price in the last 30 bars (30 min)
+// - Buy when price has dropped >1.0% from that high AND risen for 2 consecutive bars
+// - Sell at +0.8% profit target or -0.8% stop loss
 // - Long only, single position
 
-import { BPS, runBars, type Bar, type BarsState, type BuyInput, type SellInput } from './vendor/makefun-bars.ts';
+import { BPS, runBars, type BuyInput, type SellInput } from './vendor/makefun-bars.ts';
 
 const SYMBOL = 'CBBTC';
 const LOOKBACK_BARS = 30;      // 30-min lookback for high
-const DIP_THRESHOLD_BPS = 100; // Buy after >1.0% drop from 60-bar high
+const DIP_THRESHOLD_BPS = 100; // Buy after >1.0% drop from 30-bar high
 const PROFIT_TARGET_BPS = 80;  // Sell at +0.8% from entry
 const STOP_LOSS_BPS = 80;      // Sell at -0.8% from entry
 const MAX_SLIPPAGE_BPS = 100;
@@ -41,7 +41,7 @@ await runBars({
     let high = -Infinity;
     for (const c of window) if (c > high) high = c;
 
-    // Drop from 60-bar high in bps
+    // Drop from 30-bar high in bps
     const dropBps = Math.round(((high - close) / high) * 10000);
 
     const held = state.positions.get(SYMBOL);
@@ -55,7 +55,7 @@ await runBars({
         orders.push({ side: 'sell', symbol: SYMBOL, qty: held.qty, max_slippage_bps: MAX_SLIPPAGE_BPS });
       }
     } else if (dropBps >= DIP_THRESHOLD_BPS && upBars >= 2) {
-      // Significant dip from 1-hour high, with 2 consecutive up bars (reversal)
+      // Significant dip from 30-min high, with 2 consecutive up bars (reversal)
       const { caps } = state.hello;
       const byWeight = (BigInt(caps.max_weight_bps) * state.equity) / BPS;
       let slice = state.cash < byWeight ? state.cash : byWeight;
